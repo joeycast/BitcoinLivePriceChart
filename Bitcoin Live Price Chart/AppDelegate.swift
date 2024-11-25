@@ -1,3 +1,11 @@
+//
+//  AppDelegate.swift
+//  Bitcoin Live Price Chart
+//
+//  Created by Joe Castagnaro on 11/25/24.
+//
+
+
 // AppDelegate.swift
 import UIKit
 

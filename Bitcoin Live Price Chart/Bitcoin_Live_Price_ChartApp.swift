@@ -11,6 +11,9 @@ import SwiftUI
 struct Bitcoin_Live_Price_ChartApp: App {
     @StateObject private var webSocketManager = WebSocketManager()
     
+    // Connect the AppDelegate
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     var body: some Scene {
         WindowGroup {
             ContentView()

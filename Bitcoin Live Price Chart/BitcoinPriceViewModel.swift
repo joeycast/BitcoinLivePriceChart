@@ -31,7 +31,7 @@ class BitcoinPriceViewModel: ObservableObject {
     private func setupWebSocket() {
         webSocketManager.$latestPrice
             .compactMap { $0 } // Filter out nil values
-            .throttle(for: .seconds(samplingInterval), scheduler: RunLoop.main, latest: true) // Throttle to once every 10 seconds
+            .throttle(for: .seconds(samplingInterval), scheduler: RunLoop.main, latest: true) // Throttle to once every second
             .sink { [weak self] price in
                 self?.addPrice(price)
             }
