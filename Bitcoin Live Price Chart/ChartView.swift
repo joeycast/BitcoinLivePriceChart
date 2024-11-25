@@ -1,9 +1,23 @@
+//
+//  ChartView.swift
+//  Bitcoin Live Price Chart
+//
+//  Created by Joe Castagnaro on 11/24/24.
+//
+
+
 // ChartView.swift
 import SwiftUI
 import Charts
 
-struct ChartView: View {
+struct ChartView: View, Equatable {
     @ObservedObject var viewModel: BitcoinPriceViewModel
+    
+    static func == (lhs: ChartView, rhs: ChartView) -> Bool {
+        return lhs.viewModel.prices == rhs.viewModel.prices &&
+               lhs.viewModel.yAxisBounds == rhs.viewModel.yAxisBounds &&
+               lhs.viewModel.currentTime == rhs.viewModel.currentTime
+    }
     
     // Shared NumberFormatter for price formatting
     private let priceFormatter: NumberFormatter = {
@@ -23,10 +37,10 @@ struct ChartView: View {
                 yStart: .value("Min Price", viewModel.yAxisBounds.lowerBound),
                 yEnd: .value("Price", price.price)
             )
-            .interpolationMethod(.linear) // Retain linear interpolation
+            .interpolationMethod(.catmullRom) // Smooth interpolation
             .foregroundStyle(
                 LinearGradient(
-                    gradient: Gradient(colors: [Color.orange.opacity(0.25), Color.orange.opacity(0)]),
+                    gradient: Gradient(colors: [Color.orange.opacity(0.2), Color.orange.opacity(0)]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -37,7 +51,7 @@ struct ChartView: View {
                 x: .value("Time", price.time),
                 y: .value("Price", price.price)
             )
-            .interpolationMethod(.linear) // Retain linear interpolation
+            .interpolationMethod(.catmullRom) // Smooth interpolation
             .foregroundStyle(Color.orange)
         }
         .chartYAxis {
@@ -62,17 +76,28 @@ struct ChartView: View {
                     .foregroundStyle(Color.gray.opacity(0.3)) // Vertical grid lines
             }
         }
-        .chartXScale(domain: getXAxisDomain()) // Dynamic x-axis scale based on currentTime
-        //.chartOverlay { ... } // Removed to reduce rendering overhead
-        //.animation(...) // Removed to reduce CPU usage
+        .chartXScale(domain: getXAxisDomain()) // Dynamic x-axis scale based on current data
         .frame(maxWidth: .infinity, alignment: .leading) // Align Chart to leading side
         .padding([.leading, .trailing])
     }
     
-    // Function to determine the x-axis domain based on the currentTime
+    // Updated function to determine the x-axis domain based on available data
     private func getXAxisDomain() -> ClosedRange<Date> {
+        guard let firstPriceTime = viewModel.prices.first?.time else {
+            // If no data, default to current time
+            let now = viewModel.currentTime
+            return now...now
+        }
+        
+        let tenMinutesAgo = viewModel.currentTime.addingTimeInterval(-10 * 60) // 10 minutes ago
+        
+        // Determine the tentative start time
+        let tentativeStartTime = firstPriceTime > tenMinutesAgo ? firstPriceTime : tenMinutesAgo
+        
+        // Ensure startTime does not exceed endTime
+        let startTime = tentativeStartTime <= viewModel.currentTime ? tentativeStartTime : viewModel.currentTime
         let endTime = viewModel.currentTime
-        let startTime = endTime.addingTimeInterval(-10 * 60) // Last 10 minutes
+        
         return startTime...endTime
     }
     

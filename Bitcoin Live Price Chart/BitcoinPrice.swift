@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct BitcoinPrice: Identifiable {
+struct BitcoinPrice: Identifiable, Equatable {
     let id = UUID()
     let time: Date
     let price: Double
